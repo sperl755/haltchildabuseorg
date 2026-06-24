@@ -50,7 +50,9 @@ haltchildabuseorg/
 │   │   ├── globals.css       Tailwind import + design tokens (@theme) + base styles
 │   │   ├── layout.tsx        Root layout, fonts, and page metadata
 │   │   └── page.tsx          The home page (reads episodes from the CMS)
-│   └── content/episodes/     CMS content: one YAML file per interview
+│   └── content/
+│       ├── episodes/         CMS content: one YAML file per interview
+│       └── homepage/         CMS content: editable home page sections
 ├── next.config.mjs          Next config (remote image hosts)
 ├── postcss.config.js        Tailwind v4 PostCSS plugin
 ├── tsconfig.json            TypeScript config (path alias @/* -> src/*)
@@ -79,6 +81,20 @@ The home page reads episodes at build time via the Keystatic reader in
 `src/app/page.tsx` (`getEpisodes()`). The newest by date is shown first; the
 episode marked "featured" appears large at the top of the series section.
 
+### Editing home page sections
+
+The **Home page content** entry in the CMS (a Keystatic singleton stored at
+`src/content/homepage/index.yaml`) holds the editable copy for three sections:
+
+- **Warning signs** — the cards in "Recognizing the signs"
+- **What to do steps** — the numbered steps in "Get help" (numbers are
+  generated automatically from the order)
+- **Mission stats** — the three figures in "Our mission"
+
+Open `/keystatic`, choose **Home page content**, edit, and save. The page reads
+this via `getHomeContent()` in `src/app/page.tsx`. If the entry is ever missing
+or empty, the page falls back to built-in defaults so it never renders blank.
+
 ### Editing on the live site (optional upgrade)
 
 Local storage (the current setting) is great for editing on your own machine.
@@ -95,10 +111,10 @@ GitHub mode, editors log in with GitHub and saves become commits/PRs.
 
 ### Other editable content
 
-The warning signs, "what to do" steps, mission copy, and key links still live
-as simple arrays/constants near the top of `src/app/page.tsx`
-(`SIGNS`, `STEPS`, `CHANNEL_URL`, `DONATE_URL`, `HOTLINE_DISPLAY`,
-`HOTLINE_TEL`). These can be moved into Keystatic later if desired.
+The hero copy, mission heading/intro text, and key links still live as simple
+constants near the top of `src/app/page.tsx` (`CHANNEL_URL`, `DONATE_URL`,
+`HOTLINE_DISPLAY`, `HOTLINE_TEL`). These can be moved into Keystatic later if
+desired.
 
 ### Design system
 

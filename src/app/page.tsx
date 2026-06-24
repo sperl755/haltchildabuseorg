@@ -54,7 +54,8 @@ async function getEpisodes(): Promise<{ featured: Episode | null; rest: Episode[
   return { featured, rest };
 }
 
-const SIGNS: { title: string; body: string }[] = [
+// Fallback copy used if the CMS singleton has not been filled in yet.
+const DEFAULT_SIGNS: { title: string; body: string }[] = [
   {
     title: 'Changes in behavior',
     body: 'Sudden withdrawal, fearfulness, aggression, or a return to younger behaviors like bedwetting or thumb sucking.',
@@ -81,29 +82,51 @@ const SIGNS: { title: string; body: string }[] = [
   },
 ];
 
-const STEPS: { n: string; h: string; b: string }[] = [
+const DEFAULT_STEPS: { heading: string; body: string }[] = [
   {
-    n: '01',
-    h: 'Stay calm and listen',
-    b: 'If a child tells you something, believe them. Let them speak in their own words. Do not press for details or react with alarm.',
+    heading: 'Stay calm and listen',
+    body: 'If a child tells you something, believe them. Let them speak in their own words. Do not press for details or react with alarm.',
   },
   {
-    n: '02',
-    h: 'Keep the child safe',
-    b: 'Make sure the child is not alone with the person you are worried about while you figure out the next step.',
+    heading: 'Keep the child safe',
+    body: 'Make sure the child is not alone with the person you are worried about while you figure out the next step.',
   },
   {
-    n: '03',
-    h: 'Report it',
-    b: `Call the national hotline at ${HOTLINE_DISPLAY}, or your local child protective services. You do not need proof to make a report.`,
+    heading: 'Report it',
+    body: `Call the national hotline at ${HOTLINE_DISPLAY}, or your local child protective services. You do not need proof to make a report.`,
   },
 ];
+
+const DEFAULT_STATS: { number: string; label: string }[] = [
+  { number: '1 in 7', label: 'children experience abuse or neglect each year' },
+  { number: '90%', label: 'of abuse is by someone the child knows and trusts' },
+  { number: '24/7', label: 'help is available the moment you reach out' },
+];
+
+// Read editable home page copy (warning signs, help steps, mission stats)
+// from the Keystatic CMS, falling back to the defaults above.
+async function getHomeContent() {
+  const reader = createReader(process.cwd(), keystaticConfig);
+  const data = await reader.singletons.homepage.read();
+  return {
+    signs: data?.warningSigns?.length
+      ? data.warningSigns.map((s) => ({ title: s.title, body: s.body }))
+      : DEFAULT_SIGNS,
+    steps: data?.helpSteps?.length
+      ? data.helpSteps.map((s) => ({ heading: s.heading, body: s.body }))
+      : DEFAULT_STEPS,
+    stats: data?.missionStats?.length
+      ? data.missionStats.map((s) => ({ number: s.number, label: s.label }))
+      : DEFAULT_STATS,
+  };
+}
 
 const HEADING = 'font-serif opsz-96 leading-[1.1] tracking-[-0.01em]';
 const SECTION_HEADING = `${HEADING} text-[clamp(28px,4vw,44px)]`;
 
 export default async function HomePage() {
   const { featured, rest } = await getEpisodes();
+  const { signs, steps, stats } = await getHomeContent();
   return (
     <>
       {/* Safety bar */}
@@ -307,7 +330,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {SIGNS.map((sign) => (
+            {signs.map((sign) => (
               <div
                 key={sign.title}
                 className="rounded-[14px] border border-line-soft bg-surface p-6 shadow-card"
@@ -358,20 +381,22 @@ export default async function HomePage() {
               </div>
             </div>
             <div>
-              {STEPS.map((step, i) => (
+              {steps.map((step, i) => (
                 <div
-                  key={step.n}
+                  key={step.heading}
                   className={[
                     'flex gap-5 py-6',
-                    i < STEPS.length - 1 ? 'border-b border-line-soft' : '',
+                    i < steps.length - 1 ? 'border-b border-line-soft' : '',
                   ].join(' ')}
                 >
-                  <div className="font-serif text-2xl italic text-trust opsz-60">{step.n}</div>
+                  <div className="font-serif text-2xl italic text-trust opsz-60">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
                   <div>
                     <h3 className="font-serif text-xl tracking-[-0.005em] text-ink opsz-30">
-                      {step.h}
+                      {step.heading}
                     </h3>
-                    <p className="mt-1.5 text-[15px] leading-[1.55] text-ink-soft">{step.b}</p>
+                    <p className="mt-1.5 text-[15px] leading-[1.55] text-ink-soft">{step.body}</p>
                   </div>
                 </div>
               ))}
@@ -399,9 +424,9 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="mt-14 grid grid-cols-1 gap-10 text-center sm:grid-cols-3">
-            <Stat num="1 in 7" lbl="children experience abuse or neglect each year" />
-            <Stat num="90%" lbl="of abuse is by someone the child knows and trusts" />
-            <Stat num="24/7" lbl="help is available the moment you reach out" />
+            {stats.map((stat) => (
+              <Stat key={stat.number + stat.label} num={stat.number} lbl={stat.label} />
+            ))}
           </div>
         </Container>
       </section>

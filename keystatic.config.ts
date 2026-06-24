@@ -1,4 +1,4 @@
-import { config, collection, fields } from '@keystatic/core';
+import { config, collection, fields, singleton } from '@keystatic/core';
 
 export default config({
   // Local storage writes content into this repo. To let editors manage content
@@ -58,6 +58,48 @@ export default config({
           description: 'Show this one large at the top of the series section.',
           defaultValue: false,
         }),
+      },
+    }),
+  },
+  singletons: {
+    homepage: singleton({
+      label: 'Home page content',
+      path: 'src/content/homepage/',
+      format: { data: 'yaml' },
+      schema: {
+        warningSigns: fields.array(
+          fields.object({
+            title: fields.text({ label: 'Title' }),
+            body: fields.text({ label: 'Description', multiline: true }),
+          }),
+          {
+            label: 'Warning signs',
+            description: 'Cards in the "Recognizing the signs" section.',
+            itemLabel: (props) => props.fields.title.value || 'Untitled sign',
+          }
+        ),
+        helpSteps: fields.array(
+          fields.object({
+            heading: fields.text({ label: 'Heading' }),
+            body: fields.text({ label: 'Description', multiline: true }),
+          }),
+          {
+            label: 'What to do steps',
+            description: 'The numbered steps in the "Get help" section.',
+            itemLabel: (props) => props.fields.heading.value || 'Untitled step',
+          }
+        ),
+        missionStats: fields.array(
+          fields.object({
+            number: fields.text({ label: 'Number', description: 'e.g. "1 in 7"' }),
+            label: fields.text({ label: 'Label', multiline: true }),
+          }),
+          {
+            label: 'Mission stats',
+            description: 'The three figures in the "Our mission" section.',
+            itemLabel: (props) => props.fields.number.value || 'Stat',
+          }
+        ),
       },
     }),
   },

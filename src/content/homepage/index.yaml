@@ -1,0 +1,27 @@
+warningSigns:
+  - title: Changes in behavior
+    body: Sudden withdrawal, fearfulness, aggression, or a return to younger behaviors like bedwetting or thumb sucking.
+  - title: Physical clues
+    body: Unexplained bruises, burns, or injuries, especially ones that do not match the explanation given.
+  - title: Fear of a person or place
+    body: A child seems anxious or distressed around a specific adult, or resists going to a particular home or activity.
+  - title: Shifts in mood or sleep
+    body: New nightmares, trouble sleeping, depression, or a loss of interest in friends and things they once loved.
+  - title: Knowledge beyond their age
+    body: Language or behavior about adult topics that does not fit the child's age or stage.
+  - title: Avoiding home
+    body: Reluctance to go home, arriving early, staying late, or running away.
+helpSteps:
+  - heading: Stay calm and listen
+    body: If a child tells you something, believe them. Let them speak in their own words. Do not press for details or react with alarm.
+  - heading: Keep the child safe
+    body: Make sure the child is not alone with the person you are worried about while you figure out the next step.
+  - heading: Report it
+    body: Call the national hotline at 1-800-422-4453, or your local child protective services. You do not need proof to make a report.
+missionStats:
+  - number: 1 in 7
+    label: children experience abuse or neglect each year
+  - number: 90%
+    label: of abuse is by someone the child knows and trusts
+  - number: 24/7
+    label: help is available the moment you reach out
