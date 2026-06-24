@@ -28,6 +28,7 @@ signs, points people to help, and invites donations.
 - **Tailwind CSS v4** (configured via `@tailwindcss/postcss`, theme defined in
   `globals.css` with `@theme`)
 - **TypeScript** (strict mode)
+- **Keystatic** (open source, Git-based CMS for the interview episodes)
 - **Fonts:** Fraunces (serif headings) and Inter (sans body), loaded with
   `next/font/google`
 
@@ -37,30 +38,67 @@ signs, points people to help, and invites donations.
 haltchildabuseorg/
 ├── .claude/
 │   └── launch.json          Dev-server config for the preview tooling
-├── public/                  Static assets
+├── keystatic.config.ts      CMS schema: the "Interview episodes" collection
+├── public/
+│   └── images/episodes/     Episode photos uploaded through the CMS
 ├── src/
-│   └── app/
-│       ├── components/
-│       │   └── QuickExit.tsx Client component: instant "leave the site" control
-│       ├── globals.css       Tailwind import + design tokens (@theme) + base styles
-│       ├── layout.tsx        Root layout, fonts, and page metadata
-│       └── page.tsx          The home page (all sections + content data)
+│   ├── app/
+│   │   ├── api/keystatic/    CMS API route handler
+│   │   ├── keystatic/        CMS admin UI (served at /keystatic)
+│   │   ├── components/
+│   │   │   └── QuickExit.tsx Client component: instant "leave the site" control
+│   │   ├── globals.css       Tailwind import + design tokens (@theme) + base styles
+│   │   ├── layout.tsx        Root layout, fonts, and page metadata
+│   │   └── page.tsx          The home page (reads episodes from the CMS)
+│   └── content/episodes/     CMS content: one YAML file per interview
 ├── next.config.mjs          Next config (remote image hosts)
 ├── postcss.config.js        Tailwind v4 PostCSS plugin
 ├── tsconfig.json            TypeScript config (path alias @/* -> src/*)
 └── package.json
 ```
 
-### Content lives in `page.tsx`
+## Content management (Keystatic CMS)
 
-The home page is intentionally data-driven so copy can be edited without
-touching layout. Near the top of `src/app/page.tsx` you will find editable
-arrays and constants:
+Interview episodes are managed through [Keystatic](https://keystatic.com), an
+open source, Git-based CMS. There is no database and no extra server: each
+episode is a small YAML file in `src/content/episodes/`, and uploaded photos go
+to `public/images/episodes/`. Editing content is just editing files in this
+repo, which keeps everything in version control and rebuilds the static site.
 
-- `FEATURED` and `EPISODES` — the interview series content
-- `SIGNS` — the warning-signs cards
-- `STEPS` — the "what to do" guide
-- `CHANNEL_URL`, `DONATE_URL`, `HOTLINE_DISPLAY`, `HOTLINE_TEL` — key links
+### Editing episodes
+
+1. Run `npm run dev`.
+2. Open [http://localhost:3000/keystatic](http://localhost:3000/keystatic).
+3. Add or edit an episode: title, person interviewed, their role, description,
+   photo, YouTube link, length, published date, and a "feature this episode"
+   toggle. Saving writes the YAML/image files into the repo.
+4. Commit and push the changes. On a connected host (see below) the site
+   rebuilds and the new episode appears.
+
+The home page reads episodes at build time via the Keystatic reader in
+`src/app/page.tsx` (`getEpisodes()`). The newest by date is shown first; the
+episode marked "featured" appears large at the top of the series section.
+
+### Editing on the live site (optional upgrade)
+
+Local storage (the current setting) is great for editing on your own machine.
+To let non-technical editors manage content directly on the deployed site,
+switch `storage` in `keystatic.config.ts` to GitHub mode:
+
+```ts
+storage: { kind: 'github', repo: 'sperl755/haltchildabuseorg' }
+```
+
+then install the Keystatic GitHub App and set its environment variables. See
+the [Keystatic GitHub mode docs](https://keystatic.com/docs/github-mode). In
+GitHub mode, editors log in with GitHub and saves become commits/PRs.
+
+### Other editable content
+
+The warning signs, "what to do" steps, mission copy, and key links still live
+as simple arrays/constants near the top of `src/app/page.tsx`
+(`SIGNS`, `STEPS`, `CHANNEL_URL`, `DONATE_URL`, `HOTLINE_DISPLAY`,
+`HOTLINE_TEL`). These can be moved into Keystatic later if desired.
 
 ### Design system
 
@@ -96,10 +134,11 @@ npm run lint       # next lint
 
 The site ships with sample content. Update these when the real assets exist:
 
-- `CHANNEL_URL` and per-episode `url` / `thumb` values in `page.tsx`
-  (episode thumbnails currently use stock images)
-- `DONATE_URL` — wire up the real donation provider
-- Episode titles, guests, and the mission stats (sample copy)
+- The four seeded episodes are samples (stock photos, placeholder YouTube
+  links). Edit them in the CMS at `/keystatic` with your real interviews.
+- `CHANNEL_URL` and `DONATE_URL` in `page.tsx` (channel and donation links)
+- `DONATE_URL` should point at your real donation provider
+- The mission stats are sample copy in `page.tsx`
 - Confirm the hotline number is current for your audience
 
 ## Deployment

@@ -1,3 +1,5 @@
+import { createReader } from '@keystatic/core/reader';
+import keystaticConfig from '../../keystatic.config';
 import QuickExit from './components/QuickExit';
 
 // ---------------------------------------------------------------------------
@@ -18,50 +20,39 @@ type Episode = {
   thumb: string;
 };
 
-const FEATURED: Episode = {
-  title: 'What every parent wishes they had known sooner',
-  guest: 'Dr. Lena Ortiz',
-  role: 'Child psychologist, 20 years in family trauma',
-  length: '38 min',
-  blurb:
-    'A conversation about the quiet signs that something is wrong, how to ask a child the right way, and what to do the moment you feel unsure.',
-  url: CHANNEL_URL,
-  thumb:
-    'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=1200&h=675&fit=crop&auto=format',
-};
+// Resolve a usable /images/episodes/<file> path from whatever the Keystatic
+// image field returns (filename or full public path).
+function imageSrc(value: string | null): string {
+  if (!value) return '';
+  const file = value.split('/').pop();
+  return `/images/episodes/${file}`;
+}
 
-const EPISODES: Episode[] = [
-  {
-    title: 'Talking to kids so they feel safe telling you the truth',
-    guest: 'Marcus Bell',
-    role: 'Father of three, abuse survivor',
-    length: '26 min',
-    blurb: 'A parent shares what helped his children open up, and what shut them down.',
-    url: CHANNEL_URL,
-    thumb:
-      'https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=720&h=480&fit=crop&auto=format',
-  },
-  {
-    title: 'The warning signs teachers notice first',
-    guest: 'Priya Nair',
-    role: 'Elementary school counselor',
-    length: '31 min',
-    blurb: 'How professionals spot early changes, and how families can do the same at home.',
-    url: CHANNEL_URL,
-    thumb:
-      'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=720&h=480&fit=crop&auto=format',
-  },
-  {
-    title: 'What to do in the first 24 hours',
-    guest: 'Officer Dana Cole',
-    role: 'Child protective services liaison',
-    length: '29 min',
-    blurb: 'A clear, calm walkthrough of reporting, protecting the child, and what comes next.',
-    url: CHANNEL_URL,
-    thumb:
-      'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=720&h=480&fit=crop&auto=format',
-  },
-];
+// Read interview episodes from the Keystatic CMS at build time.
+async function getEpisodes(): Promise<{ featured: Episode | null; rest: Episode[] }> {
+  const reader = createReader(process.cwd(), keystaticConfig);
+  const entries = await reader.collections.episodes.all();
+
+  const all = entries
+    .map(({ entry }) => ({
+      title: entry.title,
+      guest: entry.interviewee,
+      role: entry.role,
+      length: entry.length,
+      blurb: entry.description,
+      url: entry.youtubeUrl || CHANNEL_URL,
+      thumb: imageSrc(entry.thumbnail),
+      featuredFlag: entry.featured,
+      date: entry.date ?? '',
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (all.length === 0) return { featured: null, rest: [] };
+
+  const featured = all.find((e) => e.featuredFlag) ?? all[0];
+  const rest = all.filter((e) => e !== featured);
+  return { featured, rest };
+}
 
 const SIGNS: { title: string; body: string }[] = [
   {
@@ -111,7 +102,8 @@ const STEPS: { n: string; h: string; b: string }[] = [
 const HEADING = 'font-serif opsz-96 leading-[1.1] tracking-[-0.01em]';
 const SECTION_HEADING = `${HEADING} text-[clamp(28px,4vw,44px)]`;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { featured, rest } = await getEpisodes();
   return (
     <>
       {/* Safety bar */}
@@ -209,45 +201,47 @@ export default function HomePage() {
           </div>
 
           {/* Featured episode */}
-          <a
-            href={FEATURED.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group mt-10 grid grid-cols-1 overflow-hidden rounded-[18px] border border-line bg-surface no-underline shadow-card transition hover:shadow-card-hover md:grid-cols-[1.4fr_1fr]"
-          >
-            <div className="relative aspect-video overflow-hidden bg-mist-deep">
-              <img
-                src={FEATURED.thumb}
-                alt=""
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-              />
-              <span className="absolute inset-0 flex items-center justify-center">
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-trust shadow-card transition group-hover:scale-110">
-                  <PlayIcon big />
+          {featured && (
+            <a
+              href={featured.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group mt-10 grid grid-cols-1 overflow-hidden rounded-[18px] border border-line bg-surface no-underline shadow-card transition hover:shadow-card-hover md:grid-cols-[1.4fr_1fr]"
+            >
+              <div className="relative aspect-video overflow-hidden bg-mist-deep">
+                <img
+                  src={featured.thumb}
+                  alt=""
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                />
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-trust shadow-card transition group-hover:scale-110">
+                    <PlayIcon big />
+                  </span>
                 </span>
-              </span>
-              <span className="absolute bottom-3 right-3 rounded-md bg-ink/80 px-2 py-1 text-xs font-medium text-white">
-                {FEATURED.length}
-              </span>
-            </div>
-            <div className="flex flex-col justify-center gap-3 p-7 md:p-9">
-              <span className="text-xs font-semibold uppercase tracking-[0.1em] text-warm-deep">
-                Featured episode
-              </span>
-              <h3 className="font-serif text-[clamp(22px,2.4vw,30px)] leading-[1.2] tracking-[-0.01em] text-ink opsz-60">
-                {FEATURED.title}
-              </h3>
-              <p className="text-[15px] leading-[1.55] text-ink-soft">{FEATURED.blurb}</p>
-              <p className="mt-1 text-sm font-medium text-ink">
-                {FEATURED.guest}
-                <span className="block text-[13px] font-normal text-ink-mute">{FEATURED.role}</span>
-              </p>
-            </div>
-          </a>
+                <span className="absolute bottom-3 right-3 rounded-md bg-ink/80 px-2 py-1 text-xs font-medium text-white">
+                  {featured.length}
+                </span>
+              </div>
+              <div className="flex flex-col justify-center gap-3 p-7 md:p-9">
+                <span className="text-xs font-semibold uppercase tracking-[0.1em] text-warm-deep">
+                  Featured episode
+                </span>
+                <h3 className="font-serif text-[clamp(22px,2.4vw,30px)] leading-[1.2] tracking-[-0.01em] text-ink opsz-60">
+                  {featured.title}
+                </h3>
+                <p className="text-[15px] leading-[1.55] text-ink-soft">{featured.blurb}</p>
+                <p className="mt-1 text-sm font-medium text-ink">
+                  {featured.guest}
+                  <span className="block text-[13px] font-normal text-ink-mute">{featured.role}</span>
+                </p>
+              </div>
+            </a>
+          )}
 
           {/* Episode grid */}
           <div className="mt-9 grid grid-cols-1 gap-7 md:grid-cols-3">
-            {EPISODES.map((ep) => (
+            {rest.map((ep) => (
               <a
                 key={ep.title}
                 href={ep.url}
