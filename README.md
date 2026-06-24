@@ -67,33 +67,90 @@ episode is a small YAML file in `src/content/episodes/`, and uploaded photos go
 to `public/images/episodes/`. Editing content is just editing files in this
 repo, which keeps everything in version control and rebuilds the static site.
 
-### Editing episodes
+### First: open the CMS
 
-1. Run `npm run dev`.
-2. Open [http://localhost:3000/keystatic](http://localhost:3000/keystatic).
-3. Add or edit an episode: title, person interviewed, their role, description,
-   photo, YouTube link, length, published date, and a "feature this episode"
-   toggle. Saving writes the YAML/image files into the repo.
-4. Commit and push the changes. On a connected host (see below) the site
-   rebuilds and the new episode appears.
+Every task below starts the same way.
 
-The home page reads episodes at build time via the Keystatic reader in
-`src/app/page.tsx` (`getEpisodes()`). The newest by date is shown first; the
-episode marked "featured" appears large at the top of the series section.
+1. Open a terminal in this project folder.
+2. Run `npm run dev`.
+3. In your browser, go to
+   [http://localhost:3000/keystatic](http://localhost:3000/keystatic).
 
-### Editing home page sections
+You will see two things to manage: **Interview episodes** (the video posts) and
+**Home page content** (editable sections of the home page).
 
-The **Home page content** entry in the CMS (a Keystatic singleton stored at
-`src/content/homepage/index.yaml`) holds the editable copy for three sections:
+### How to add a new interview post
 
-- **Warning signs** — the cards in "Recognizing the signs"
-- **What to do steps** — the numbered steps in "Get help" (numbers are
-  generated automatically from the order)
-- **Mission stats** — the three figures in "Our mission"
+1. Open the CMS (steps above) and click **Interview episodes**.
+2. Click **Create** (top right).
+3. Fill in the fields:
+   - **Title** — the name of the interview. The URL slug fills in automatically.
+   - **Person interviewed** — the guest's name.
+   - **Their role or background** — e.g. "Child psychologist, 20 years in family
+     trauma".
+   - **Description** — one or two sentences shown on the card.
+   - **Photo** — click to upload the cover image (a 16:9 / landscape image looks
+     best).
+   - **YouTube link** — paste the full link to the video.
+   - **Length** — e.g. "38 min".
+   - **Published date** — used to order posts. Newest shows first.
+   - **Feature this episode** — turn on to show it large at the top of the
+     series section. Only turn this on for one post at a time.
+4. Click **Create** / **Save**. This writes a new file in
+   `src/content/episodes/` and saves the photo to `public/images/episodes/`.
+5. Publish your change (see "Saving and publishing" below).
 
-Open `/keystatic`, choose **Home page content**, edit, and save. The page reads
-this via `getHomeContent()` in `src/app/page.tsx`. If the entry is ever missing
-or empty, the page falls back to built-in defaults so it never renders blank.
+### How to change an existing post
+
+1. Open the CMS and click **Interview episodes**.
+2. Click the post you want to change in the list.
+3. Edit any field, replace the photo, or toggle **Feature this episode**.
+4. Click **Save**.
+5. Publish your change (see "Saving and publishing" below).
+
+To remove a post, open it and use the **Delete** option, then publish.
+
+### How to add or change home page content
+
+The home page sections (other than the videos) are edited in one place.
+
+1. Open the CMS and click **Home page content**.
+2. You will see three groups you can edit:
+   - **Warning signs** — the cards in the "Recognizing the signs" section.
+   - **What to do steps** — the numbered steps in the "Get help" section. The
+     01 / 02 / 03 numbers are added automatically based on the order, so you can
+     reorder freely.
+   - **Mission stats** — the three figures in the "Our mission" section
+     (a **Number** like "1 in 7" and a **Label**).
+3. To **add** an item, click **Add** under the group and fill in the fields.
+   To **change** one, edit it in place. To **reorder**, drag items by the handle.
+   To **remove** one, use the item's delete control.
+4. Click **Save**.
+5. Publish your change (see "Saving and publishing" below).
+
+### Saving and publishing
+
+Saving in the CMS writes files into this repository on your computer. To make
+the changes appear on the live site, publish them with Git:
+
+```bash
+git add -A
+git commit -m "Update interview content"
+git push
+```
+
+If the site is hosted on a service like Vercel or Netlify, the push triggers a
+rebuild and your changes go live in a minute or two. (To let editors save
+directly to the live site without using Git, see "Editing on the live site"
+below.)
+
+### How it works under the hood
+
+- Episodes are read at build time by `getEpisodes()` in `src/app/page.tsx`.
+  Newest by date is shown first; the "featured" one appears at the top.
+- Home page sections are read by `getHomeContent()` from the
+  `src/content/homepage/index.yaml` singleton. If that entry is ever missing or
+  empty, the page falls back to built-in defaults so it never renders blank.
 
 ### Editing on the live site (optional upgrade)
 
